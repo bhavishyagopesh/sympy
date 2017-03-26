@@ -357,15 +357,18 @@ def test_numpy_old_matrix():
         skip("numpy not installed.")
     A = Matrix([[x, x*y], [sin(z) + 4, x**z]])
     sol_arr = numpy.array([[1, 2], [numpy.sin(3) + 4, 1]])
-    f = lambdify((x, y, z), A, [{'ImmutableMatrix': numpy.matrix}, 'numpy'])
+    f = lambdify((x, y, z), A, [{'ImmutableDenseMatrix': numpy.matrix}, 'numpy'])
     numpy.testing.assert_allclose(f(1, 2, 3), sol_arr)
     assert isinstance(f(1, 2, 3), numpy.matrix)
 
 def test_python_div_zero_issue_11306():
     if not numpy:
         skip("numpy not installed.")
-    p = Piecewise((1 / x, y < -1), (x, y <= 1), (1 / x, True))
-    lambdify([x, y], p, modules='numpy')(0, 1)
+    p = Piecewise((1 / x, y < -1), (x, y < 1), (1 / x, True))
+    f = lambdify([x, y], p, modules='numpy')
+    numpy.seterr(divide='ignore')
+    assert str(float(f(0,1))) == 'inf'
+    numpy.seterr(divide='warn')
 
 def test_issue9474():
     mods = [None, 'math']
